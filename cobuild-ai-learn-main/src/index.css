@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Cobuild AI Dark Theme (Zinc-950 Based) */
+    --background: 240 6% 6%;
+    --foreground: 240 5% 96%;
+
+    --card: 240 5% 8%;
+    --card-foreground: 240 5% 96%;
+
+    --popover: 240 5% 8%;
+    --popover-foreground: 240 5% 96%;
+
+    --primary: 142 76% 56%;
+    --primary-foreground: 240 6% 6%;
+
+    --secondary: 240 5% 12%;
+    --secondary-foreground: 240 5% 96%;
+
+    --muted: 240 5% 14%;
+    --muted-foreground: 240 4% 60%;
+
+    --accent: 142 76% 56%;
+    --accent-foreground: 240 6% 6%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 240 5% 96%;
+
+    --success: 142 76% 56%;
+    --success-foreground: 240 6% 6%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 240 6% 6%;
+
+    --border: 240 5% 18%;
+    --input: 240 5% 18%;
+    --ring: 142 76% 56%;
+
+    --radius: 0.75rem;
+
+    /* IDE Specific Colors */
+    --editor-bg: 240 5% 7%;
+    --terminal-bg: 240 5% 5%;
+    --sidebar-active: 240 5% 16%;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(142 76% 56% / 0.1), hsl(240 6% 6%));
+    --gradient-card: linear-gradient(180deg, hsl(240 5% 10%), hsl(240 5% 8%));
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 3px hsl(240 6% 6% / 0.3);
+    --shadow-md: 0 4px 6px hsl(240 6% 6% / 0.4);
+    --shadow-lg: 0 10px 20px hsl(240 6% 6% / 0.5);
+    --shadow-accent: 0 0 20px hsl(142 76% 56% / 0.15);
+
+    /* Transitions */
+    --transition-base: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
