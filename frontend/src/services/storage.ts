@@ -1,4 +1,4 @@
-import { UserProfile, Project } from "@/types";
+import { UserProfile, Project, Challenge } from "@/types";
 
 const STORAGE_KEYS = {
   PROFILE: "cobuild_profile",
@@ -55,13 +55,13 @@ export const storageService = {
   saveProject(project: Project): void {
     const projects = this.getProjects();
     const index = projects.findIndex((p) => p.id === project.id);
-    
+
     if (index >= 0) {
       projects[index] = { ...project, lastModified: Date.now() };
     } else {
       projects.push(project);
     }
-    
+
     this.setProjects(projects);
   },
 
@@ -71,29 +71,40 @@ export const storageService = {
   },
 
   // Challenges
-  getCompletedChallenges(): string[] {
+  getChallenges(): Challenge[] {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.CHALLENGES);
-      return data ? JSON.parse(data).completed || [] : [];
+      return data ? JSON.parse(data).challenges || [] : [];
     } catch (error) {
       console.error("Failed to get challenges:", error);
       return [];
     }
   },
 
-  markChallengeCompleted(challengeId: string): void {
+  saveChallenges(challenges: Challenge[]): void {
     try {
-      const completed = this.getCompletedChallenges();
-      if (!completed.includes(challengeId)) {
-        completed.push(challengeId);
-        localStorage.setItem(
-          STORAGE_KEYS.CHALLENGES,
-          JSON.stringify({ completed })
-        );
-      }
+      localStorage.setItem(
+        STORAGE_KEYS.CHALLENGES,
+        JSON.stringify({ challenges })
+      );
     } catch (error) {
-      console.error("Failed to save challenge:", error);
+      console.error("Failed to save challenges:", error);
+      throw new Error("فشل حفظ التحديات. قد تكون مساحة التخزين ممتلئة.");
     }
+  },
+
+  addChallenges(newChallenges: Challenge[]): void {
+    const challenges = this.getChallenges();
+    const updated = [...newChallenges, ...challenges];
+    this.saveChallenges(updated);
+  },
+
+  markChallengeSolved(challengeId: string): void {
+    const challenges = this.getChallenges();
+    const updated = challenges.map((c) =>
+      c.id === challengeId ? { ...c, solved: true } : c
+    );
+    this.saveChallenges(updated);
   },
 
   // Clear all data

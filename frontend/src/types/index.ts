@@ -41,9 +41,10 @@ export interface Challenge {
   id: string;
   title: string;
   difficulty: "easy" | "medium" | "hard";
+  language: Language;
   description: string;
-  completed: boolean;
-  locked: boolean;
+  solved: boolean;
+  createdAt: number;
 }
 
 export interface PistonRequest {
