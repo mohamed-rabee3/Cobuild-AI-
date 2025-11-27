@@ -1,31 +1,55 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Play, Lightbulb } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import { pistonService } from "@/services/piston";
 import { toast } from "sonner";
+import { storageService } from "@/services/storage";
+import { Challenge } from "@/types";
 
 const ChallengeRunner = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [code, setCode] = useState("def is_palindrome(s):\n    # Your code here\n    pass");
+  const [code, setCode] = useState("");
   const [output, setOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
+  const [challenge, setChallenge] = useState<Challenge | null>(null);
 
-  // Mock challenge data
-  const challenge = {
-    title: "Palindrome Checker",
-    description: "Write a function that checks if a string is a palindrome.",
-    examples: [
-      { input: '"racecar"', output: "True" },
-      { input: '"hello"', output: "False" },
-    ],
-    testCases: [
-      { input: "madam", expected: true },
-      { input: "python", expected: false },
-    ],
-  };
+  // Load challenge from localStorage based on ID
+  useEffect(() => {
+    if (!id) {
+      toast.error("Challenge ID missing");
+      navigate("/challenges");
+      return;
+    }
+
+    const challenges = storageService.getChallenges();
+    const foundChallenge = challenges.find((c) => c.id === id);
+
+    if (!foundChallenge) {
+      toast.error("Challenge not found");
+      navigate("/challenges");
+      return;
+    }
+
+    setChallenge(foundChallenge);
+
+    // Set initial code to function signature
+    setCode(foundChallenge.function_signature + "\n    # Your code here\n    pass");
+  }, [id, navigate]);
+
+  // Return loading state while challenge loads
+  if (!challenge) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="text-4xl mb-4">⏳</div>
+          <p className="text-muted-foreground">Loading challenge...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleTest = async () => {
     if (!code.trim()) {
@@ -78,17 +102,26 @@ const ChallengeRunner = () => {
       <div className="flex-1 flex overflow-hidden">
         {/* Description Panel */}
         <div className="w-2/5 border-r border-border bg-card overflow-y-auto p-6">
-          <h2 className="text-lg font-bold mb-4">📝 الوصف</h2>
-          <p className="text-muted-foreground mb-6">{challenge.description}</p>
+          <h2 className="text-lg font-bold mb-4 text-right" dir="rtl">📝 الوصف</h2>
 
-          <h3 className="font-semibold mb-3">أمثلة:</h3>
-          <div className="space-y-2 mb-6">
-            {challenge.examples.map((ex, i) => (
-              <div key={i} className="bg-secondary/30 rounded-lg p-3 font-mono text-sm">
-                <div>Input: {ex.input}</div>
-                <div className="text-primary">Output: {ex.output}</div>
-              </div>
+          {/* Render description as markdown-like text (split by paragraphs) - RTL for Arabic */}
+          <div className="text-muted-foreground mb-6 space-y-3 text-right" dir="rtl">
+            {challenge.description.split('\n').map((paragraph, i) => (
+              paragraph.trim() && <p key={i} className="leading-relaxed" dangerouslySetInnerHTML={{ __html: paragraph.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
             ))}
+          </div>
+
+          <h3 className="font-semibold mb-3 text-right" dir="rtl">أمثلة:</h3>
+          <div className="space-y-2 mb-6">
+            {challenge.test_cases
+              .filter((tc) => !tc.hidden)
+              .slice(0, 3)
+              .map((tc, i) => (
+                <div key={i} className="bg-secondary/30 rounded-lg p-3 font-mono text-sm">
+                  <div>Input: {tc.input}</div>
+                  <div className="text-primary">Expected: {tc.expected}</div>
+                </div>
+              ))}
           </div>
         </div>
 
@@ -105,7 +138,7 @@ const ChallengeRunner = () => {
           <div className="flex-1">
             <Editor
               height="100%"
-              defaultLanguage="python"
+              defaultLanguage={challenge.language === "cpp" ? "cpp" : challenge.language}
               value={code}
               onChange={(value) => setCode(value || "")}
               theme="vs-dark"

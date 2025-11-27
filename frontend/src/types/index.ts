@@ -37,12 +37,20 @@ export interface Project {
   createdAt: number;
 }
 
+export interface TestCase {
+  input: string;
+  expected: string;
+  hidden: boolean;
+}
+
 export interface Challenge {
   id: string;
   title: string;
   difficulty: "easy" | "medium" | "hard";
   language: Language;
   description: string;
+  function_signature: string;
+  test_cases: TestCase[];
   solved: boolean;
   createdAt: number;
 }

@@ -2,7 +2,18 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ArrowLeft, Plus } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Challenge } from "@/types";
 import { storageService } from "@/services/storage";
 import GenerateChallengesModal from "@/components/modals/GenerateChallengesModal";
@@ -10,6 +21,7 @@ import GenerateChallengesModal from "@/components/modals/GenerateChallengesModal
 const Challenges = () => {
   const navigate = useNavigate();
   const [showGenerateModal, setShowGenerateModal] = useState(false);
+  const [showClearDialog, setShowClearDialog] = useState(false);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
 
@@ -50,6 +62,17 @@ const Challenges = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleClearChallenges = () => {
+    // Clear from localStorage
+    storageService.clearChallenges();
+    // Clear from state
+    setChallenges([]);
+    // Close dialog
+    setShowClearDialog(false);
+    // Show toast
+    toast.success("All challenges cleared");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -57,13 +80,26 @@ const Challenges = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold">⚔️ Daily Challenges</h1>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/dashboard")}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {challenges.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowClearDialog(true)}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Clear All
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/dashboard")}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -175,6 +211,27 @@ const Challenges = () => {
         onOpenChange={setShowGenerateModal}
         onChallengesGenerated={handleChallengesGenerated}
       />
+
+      <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear All Challenges?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all {challenges.length} challenge{challenges.length > 1 ? 's' : ''} from your list.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleClearChallenges}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Clear All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

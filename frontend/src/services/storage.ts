@@ -107,6 +107,10 @@ export const storageService = {
     this.saveChallenges(updated);
   },
 
+  clearChallenges(): void {
+    this.saveChallenges([]);
+  },
+
   // Clear all data
   clearAll(): void {
     Object.values(STORAGE_KEYS).forEach((key) => {

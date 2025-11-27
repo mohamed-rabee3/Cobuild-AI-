@@ -7,9 +7,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { toast } from "sonner";
 import { Challenge, Language } from "@/types";
 import { storageService } from "@/services/storage";
+import { useGenerateChallenges } from "@/hooks/useChallenges";
 
 interface GenerateChallengesModalProps {
     open: boolean;
@@ -29,62 +29,32 @@ const GenerateChallengesModal = ({
         const profile = storageService.getProfile();
         return profile?.language || "python";
     });
-    const [isGenerating, setIsGenerating] = useState(false);
+
+    // Use the custom React Query hook
+    const generateMutation = useGenerateChallenges((challenges) => {
+        // Notify parent component
+        onChallengesGenerated(challenges);
+
+        // Close modal
+        onOpenChange(false);
+
+        // Reset form
+        setCount([3]);
+        setDifficulty("medium");
+    });
 
     const handleGenerate = async () => {
-        setIsGenerating(true);
+        // Collect existing titles to avoid duplicates
+        const existingChallenges = storageService.getChallenges();
+        const existingTitles = existingChallenges.map((c) => c.title);
 
-        try {
-            // Collect existing titles to avoid duplicates
-            const existingChallenges = storageService.getChallenges();
-            const existingTitles = existingChallenges.map((c) => c.title);
-
-            // TODO: Replace with actual API call
-            // const response = await fetch('/api/challenges/generate', {
-            //   method: 'POST',
-            //   headers: { 'Content-Type': 'application/json' },
-            //   body: JSON.stringify({
-            //     count: count[0],
-            //     difficulty,
-            //     language,
-            //     existing_titles: existingTitles
-            //   })
-            // });
-
-            // Mock API response for now
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-
-            const mockChallenges: Challenge[] = Array.from({ length: count[0] }, (_, i) => ({
-                id: `challenge-${Date.now()}-${i}`,
-                title: `${difficulty} ${language} Challenge ${i + 1}`,
-                difficulty,
-                language,
-                description: `Solve this ${difficulty} coding problem using ${language}`,
-                solved: false,
-                createdAt: Date.now() - i,
-            }));
-
-            // Add to localStorage
-            storageService.addChallenges(mockChallenges);
-
-            // Notify parent component
-            onChallengesGenerated(mockChallenges);
-
-            // Close modal
-            onOpenChange(false);
-
-            // Show success toast
-            toast.success(`✅ Generated ${count[0]} new challenge${count[0] > 1 ? 's' : ''}!`);
-
-            // Reset form
-            setCount([3]);
-            setDifficulty("medium");
-        } catch (error) {
-            console.error("Failed to generate challenges:", error);
-            toast.error("Failed to generate challenges. Please try again.");
-        } finally {
-            setIsGenerating(false);
-        }
+        // Call the API via mutation
+        generateMutation.mutate({
+            count: count[0],
+            difficulty,
+            language,
+            existing_titles: existingTitles
+        });
     };
 
     return (
@@ -235,16 +205,16 @@ const GenerateChallengesModal = ({
                         variant="outline"
                         onClick={() => onOpenChange(false)}
                         className="flex-1"
-                        disabled={isGenerating}
+                        disabled={generateMutation.isPending}
                     >
                         Cancel
                     </Button>
                     <Button
                         onClick={handleGenerate}
                         className="flex-1"
-                        disabled={isGenerating}
+                        disabled={generateMutation.isPending}
                     >
-                        {isGenerating ? (
+                        {generateMutation.isPending ? (
                             <>
                                 <span className="animate-spin mr-2">⏳</span>
                                 Generating...
