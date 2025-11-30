@@ -14,6 +14,18 @@
 
 ---
 
+## 🎥 Demo
+
+<div align="center">
+
+<video src="Demo/demo.mp4" width="800" controls>
+  Your browser does not support the video tag.
+</video>
+
+</div>
+
+---
+
 ## 📖 Table of Contents
 
 - [About](#-about)
