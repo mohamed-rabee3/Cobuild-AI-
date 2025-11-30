@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { storageService } from "@/services/storage";
+import { projectsApi } from "@/services/projectsApi";
 import { Project, ChatMessage } from "@/types";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Play, Plus, Trash2, Lightbulb, Send } from "lucide-react";
+import { ArrowLeft, Play, Plus, Trash2, Lightbulb, Send, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +14,8 @@ import { toast } from "sonner";
 import Editor from "@monaco-editor/react";
 import MermaidChart from "@/components/ide/MermaidChart";
 import { pistonService } from "@/services/piston";
+import { containsArabic } from "@/lib/utils";
+import MarkdownRenderer from "@/components/MarkdownRenderer";
 
 const ProjectIDENew = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +29,8 @@ const ProjectIDENew = () => {
   const [showSolutionModal, setShowSolutionModal] = useState(false);
   const [chatMessage, setChatMessage] = useState("");
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const [isReviewLoading, setIsReviewLoading] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -42,7 +47,11 @@ const ProjectIDENew = () => {
 
     setProject(loadedProject);
     setCode(loadedProject.code);
-    setChatHistory(loadedProject.chatHistory || []);
+    // Filter out any messages without content when loading
+    const validChatHistory = (loadedProject.chatHistory || []).filter(
+      (msg) => msg.content && msg.content.trim().length > 0
+    );
+    setChatHistory(validChatHistory);
   }, [id, navigate]);
 
   // Auto-save code every 2 seconds
@@ -97,46 +106,132 @@ const ProjectIDENew = () => {
     storageService.saveProject(updatedProject);
   };
 
-  const handleSendMessage = () => {
-    if (!chatMessage.trim() || !project) return;
+  const handleSendMessage = async () => {
+    if (!chatMessage.trim() || !project || isChatLoading) return;
+
+    // Save message before clearing
+    const messageText = chatMessage.trim();
 
     const userMessage: ChatMessage = {
       role: "user",
-      content: chatMessage,
+      content: messageText,
       timestamp: Date.now(),
     };
 
-    // Mock AI response
-    const aiMessage: ChatMessage = {
-      role: "assistant",
-      content: "هذه رسالة تجريبية من الذكاء الاصطناعي. سيتم ربط الـ AI في المرحلة القادمة! 🤖",
-      timestamp: Date.now() + 1000,
-    };
+    // Add user message immediately
+    const tempHistory = [...chatHistory, userMessage];
+    setChatHistory(tempHistory);
+    setChatMessage(""); // Clear input after saving message
+    setIsChatLoading(true);
 
-    const updatedHistory = [...chatHistory, userMessage, aiMessage];
-    setChatHistory(updatedHistory);
+    try {
+      // Call AI mentor API
+      // Filter out messages without content and ensure all required fields are present
+      const validHistory = chatHistory
+        .filter((msg) => msg.content && msg.content.trim().length > 0)
+        .map((msg) => ({
+          role: msg.role,
+          content: msg.content.trim(),
+        }))
+        .slice(-10); // Only send last 10 messages to avoid token limits
 
-    const updatedProject = { ...project, chatHistory: updatedHistory };
-    storageService.saveProject(updatedProject);
+      const response = await projectsApi.chatWithMentor({
+        message: messageText, // Use saved message, not chatMessage (which is now empty)
+        language: project.language,
+        project_title: project.title,
+        history: validHistory,
+        current_code: code,
+      });
 
-    setChatMessage("");
-    toast.info("ميزة الـ AI قيد التطوير");
+      // Add AI response
+      if (!response.response || !response.response.trim()) {
+        throw new Error("Empty AI response");
+      }
+
+      const aiMessage: ChatMessage = {
+        role: "assistant",
+        content: response.response.trim(),
+        timestamp: Date.now(),
+      };
+
+      const updatedHistory = [...tempHistory, aiMessage];
+      setChatHistory(updatedHistory);
+
+      // Save to localStorage
+      const updatedProject = { ...project, chatHistory: updatedHistory };
+      storageService.saveProject(updatedProject);
+    } catch (error: any) {
+      console.error("Chat error:", error);
+      console.error("Error details:", {
+        message: error.message,
+        status: error.status,
+        code: error.code,
+        originalError: error.originalError,
+      });
+      
+      // Show more specific error message
+      if (error.status === 422) {
+        toast.error("البيانات المرسلة غير صحيحة. تحقق من الرسالة.");
+      } else if (error.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("فشل الاتصال بالمساعد الذكي. حاول مرة أخرى.");
+      }
+    } finally {
+      setIsChatLoading(false);
+    }
   };
 
-  const handleReviewCode = () => {
-    if (!code.trim()) {
+  const handleReviewCode = async () => {
+    if (!code.trim() || !project || isReviewLoading) {
       toast.error("اكتب بعض الكود أولاً!");
       return;
     }
 
-    const reviewMessage: ChatMessage = {
-      role: "assistant",
-      content: "رائع! الكود يبدو جيداً. لكن هل فكرت في معالجة الأخطاء المحتملة؟ 🤔",
-      timestamp: Date.now(),
-    };
+    setIsReviewLoading(true);
 
-    setChatHistory([...chatHistory, reviewMessage]);
-    toast.info("تم مراجعة الكود - نسخة تجريبية");
+    try {
+      // Calculate current task index
+      const currentTaskIndex = project.tasks.findIndex((t) => !t.completed);
+
+      // Call code review API
+      const response = await projectsApi.reviewCode({
+        code: code.trim(),
+        language: project.language,
+        project_context: {
+          title: project.title,
+          tasks: project.tasks.map((t) => t.text),
+          current_task_index: currentTaskIndex >= 0 ? currentTaskIndex : 0,
+        },
+      });
+
+      // Add review message to chat
+      if (!response.review_comment || !response.review_comment.trim()) {
+        throw new Error("Empty review response");
+      }
+
+      const reviewMessage: ChatMessage = {
+        role: "assistant",
+        content: response.review_comment.trim(),
+        timestamp: Date.now(),
+      };
+      
+      console.log("Review response:", response);
+
+      const updatedHistory = [...chatHistory, reviewMessage];
+      setChatHistory(updatedHistory);
+
+      // Save to localStorage
+      const updatedProject = { ...project, chatHistory: updatedHistory };
+      storageService.saveProject(updatedProject);
+
+      toast.success("تمت مراجعة الكود! 🔬");
+    } catch (error: any) {
+      console.error("Review error:", error);
+      toast.error("فشل تحليل الكود. حاول مرة أخرى.");
+    } finally {
+      setIsReviewLoading(false);
+    }
   };
 
   if (!project) return null;
@@ -180,7 +275,8 @@ const ProjectIDENew = () => {
               {project.tasks.map((task) => (
                 <div
                   key={task.id}
-                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-secondary/50 transition-colors"
+                  className={`flex items-start gap-3 p-3 rounded-lg hover:bg-secondary/50 transition-colors ${containsArabic(task.text) ? "flex-row-reverse" : ""}`}
+                  dir={containsArabic(task.text) ? "rtl" : "ltr"}
                 >
                   <Checkbox
                     checked={task.completed}
@@ -188,9 +284,8 @@ const ProjectIDENew = () => {
                     className="mt-1"
                   />
                   <span
-                    className={`text-sm ${
-                      task.completed ? "line-through text-muted-foreground" : ""
-                    }`}
+                    className={`text-sm ${task.completed ? "line-through text-muted-foreground" : ""
+                      }`}
                   >
                     {task.text}
                   </span>
@@ -274,21 +369,26 @@ const ProjectIDENew = () => {
 
           {/* Chat Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {chatHistory.map((msg, i) => (
-              <div
-                key={i}
-                className={`rounded-lg p-3 ${
-                  msg.role === "assistant"
+            {chatHistory.map((msg, i) => {
+              const isArabic = containsArabic(msg.content);
+              return (
+                <div
+                  key={i}
+                  className={`rounded-lg p-3 ${msg.role === "assistant"
                     ? "bg-primary/10 text-foreground"
                     : "bg-secondary/50 ml-4"
-                }`}
-              >
-                <p className="text-xs font-medium mb-1">
-                  {msg.role === "assistant" ? "🤖 AI Mentor" : "👤 أنت"}
-                </p>
-                <p className="text-sm">{msg.content}</p>
-              </div>
-            ))}
+                    }`}
+                  dir={isArabic ? "rtl" : "ltr"}
+                >
+                  <p className={`text-xs font-medium mb-2 ${isArabic ? "text-right" : "text-left"}`}>
+                    {msg.role === "assistant" ? "🤖 AI Mentor" : "👤 أنت"}
+                  </p>
+                  <div className="text-sm">
+                    <MarkdownRenderer content={msg.content} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Input Area */}
@@ -307,13 +407,31 @@ const ProjectIDENew = () => {
               }}
             />
 
-            <Button onClick={handleSendMessage} className="w-full" size="sm">
-              <Send className="h-4 w-4 mr-2" />
-              إرسال
+            <Button onClick={handleSendMessage} className="w-full" size="sm" disabled={isChatLoading || !chatMessage.trim()}>
+              {isChatLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  جاري الإرسال...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  إرسال
+                </>
+              )}
             </Button>
 
-            <Button variant="outline" className="w-full" size="sm" onClick={handleReviewCode}>
-              🔬 Review My Code
+            <Button variant="outline" className="w-full" size="sm" onClick={handleReviewCode} disabled={isReviewLoading || !code.trim()}>
+              {isReviewLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  جاري المراجعة...
+                </>
+              ) : (
+                <>
+                  🔬 Review My Code
+                </>
+              )}
             </Button>
           </div>
         </div>

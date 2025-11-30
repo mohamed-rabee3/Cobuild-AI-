@@ -33,7 +33,7 @@
 
 ### Backend (Server-Side)
 - **Framework:** FastAPI (Python 3.10+)
-- **AI Engine:** Google Gemini 1.5 Pro
+- **AI Engine:** Google Gemini 2.5 Pro
   - SDK: `google-generativeai`
 - **Data Validation:** Pydantic v2 (Strict JSON enforcement)
 - **CORS:** Enabled for localhost development
@@ -1696,7 +1696,7 @@ class ProjectInitRequest(BaseModel):
 - `language`: Required, must be one of: "python", "javascript", "cpp"
 - `level`: Required, must be one of: "beginner", "intermediate", "advanced"
 
-**System Prompt (Gemini 1.5 Pro):**
+**System Prompt (Gemini 2.5 Pro):**
 ```
 You are an expert software engineer and programming educator.
 
@@ -1862,7 +1862,7 @@ class CodeReviewRequest(BaseModel):
 - `project_context.current_task_index`: Required, integer (0-based)
 - `previous_review`: Optional, string
 
-**System Prompt (Gemini 1.5 Pro):**
+**System Prompt (Gemini 2.5 Pro):**
 ```
 You are a Socratic Mentor (معلم سقراطي) for programming students.
 
@@ -2037,7 +2037,7 @@ class ChatRequest(BaseModel):
 - `history`: Optional, max 10 messages (to limit context size)
 - `current_code`: Optional, for context
 
-**System Prompt (Gemini 1.5 Pro):**
+**System Prompt (Gemini 2.5 Pro):**
 ```
 You are a friendly programming mentor helping a student build: {project_title}
 
@@ -2158,7 +2158,7 @@ class ChallengeGenerateRequest(BaseModel):
 - `language`: Required
 - `existing_titles`: Optional, array of strings (used to avoid duplicates)
 
-**System Prompt (Gemini 1.5 Pro):**
+**System Prompt (Gemini 2.5 Pro):**
 ```
 You are a programming challenge designer for {language}.
 
@@ -2872,7 +2872,7 @@ const ErrorFallback = ({ error, resetError }) => {
 
 ### Backend Requirements:
 - [ ] FastAPI server with CORS
-- [ ] Gemini 1.5 Pro integration
+- [ ] Gemini 2.5 Pro integration
 - [ ] 4 endpoints fully implemented:
   - `/api/project/init`
   - `/api/project/review`

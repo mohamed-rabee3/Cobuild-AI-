@@ -58,21 +58,94 @@ const ChallengeRunner = () => {
     }
 
     setIsRunning(true);
-    setOutput("جاري الاختبار...\n");
+    setOutput("🔄 جاري الاختبار...\n");
 
     try {
-      // Mock testing - in real app, call Piston with test cases
-      setTimeout(() => {
-        setOutput(
-          `Testing...\n\n` +
-          `✅ Test 1: is_palindrome("madam") → Passed\n` +
-          `❌ Test 2: is_palindrome("python") → Failed (Expected: False, Got: True)\n\n` +
-          `2/5 test cases passed`
-        );
-        setIsRunning(false);
-      }, 1500);
+      let passedCount = 0;
+      const totalTests = challenge.test_cases.length;
+      let outputText = "Testing...\n\n";
+
+      // Run each test case
+      for (let i = 0; i < challenge.test_cases.length; i++) {
+        const testCase = challenge.test_cases[i];
+
+        // Create test runner code based on language
+        let testCode = "";
+        if (challenge.language === "python") {
+          testCode = `${code}\n\n# Test execution\nprint(${testCase.input})`;
+        } else if (challenge.language === "javascript") {
+          testCode = `${code}\n\n// Test execution\nconsole.log(${testCase.input});`;
+        } else if (challenge.language === "cpp") {
+          // For C++, need to wrap in main function
+          testCode = `#include <iostream>\nusing namespace std;\n\n${code}\n\nint main() {\n    cout << ${testCase.input} << endl;\n    return 0;\n}`;
+        }
+
+        try {
+          // Execute code with Piston
+          const result = await pistonService.execute(testCode, challenge.language);
+
+          const actualOutput = result.run?.stdout?.trim() || result.run?.output?.trim() || "";
+
+          // Parse expected output - remove surrounding quotes if it's a string
+          let expectedOutput = String(testCase.expected).trim();
+          // Remove surrounding quotes if present (e.g., "hello" -> hello)
+          if (expectedOutput.startsWith('"') && expectedOutput.endsWith('"')) {
+            expectedOutput = expectedOutput.slice(1, -1);
+          } else if (expectedOutput.startsWith("'") && expectedOutput.endsWith("'")) {
+            expectedOutput = expectedOutput.slice(1, -1);
+          }
+
+          const passed = actualOutput === expectedOutput;
+
+          if (passed) passedCount++;
+
+          // Build output display
+          const testLabel = testCase.hidden ? `Hidden Test ${i + 1}` : `Test ${i + 1}`;
+          const inputDisplay = testCase.hidden ? "[Hidden]" : testCase.input;
+
+          if (passed) {
+            outputText += `✅ ${testLabel}: ${inputDisplay} → Passed\n`;
+          } else {
+            outputText += `❌ ${testLabel}: ${inputDisplay} → Failed\n`;
+            // TEMPORARILY show hidden test details for debugging
+            outputText += `   Expected: "${expectedOutput}"\n`;
+            outputText += `   Got: "${actualOutput}"\n`;
+            outputText += `   Input was: ${testCase.input}\n`;
+          }
+
+          // Show compile/runtime errors if any
+          if (result.compile?.stderr) {
+            outputText += `   ⚠️ Compile Error: ${result.compile.stderr}\n`;
+          }
+          if (result.run?.stderr) {
+            outputText += `   ⚠️ Runtime Error: ${result.run.stderr}\n`;
+          }
+        } catch (testError: any) {
+          outputText += `❌ Test ${i + 1}: Error executing test\n`;
+          outputText += `   ${testError.message}\n`;
+        }
+
+        outputText += "\n";
+      }
+
+      // Summary
+      outputText += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+      outputText += `📊 Results: ${passedCount}/${totalTests} test cases passed\n`;
+
+      if (passedCount === totalTests) {
+        outputText += `\n🎉 Excellent! All tests passed!\n`;
+        // Mark challenge as solved
+        storageService.markChallengeSolved(challenge.id);
+        toast.success("تهانينا! حليت التحدي بنجاح! 🎉");
+      } else {
+        outputText += `\n💡 Keep trying! ${totalTests - passedCount} test(s) need fixing.\n`;
+      }
+
+      setOutput(outputText);
     } catch (error: any) {
-      setOutput(`Error: ${error.message}`);
+      setOutput(`❌ Error: ${error.message}\n\nPlease check your code and try again.`);
+      toast.error("حدث خطأ أثناء التشغيل");
+    } finally {
       setIsRunning(false);
     }
   };

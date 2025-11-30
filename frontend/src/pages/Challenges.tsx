@@ -155,7 +155,7 @@ const Challenges = () => {
                       transition-all duration-200
                       hover:shadow-lg hover:scale-105 cursor-pointer
                     `}
-                    onClick={() => !challenge.solved && navigate(`/challenge/${challenge.id}`)}
+                    onClick={() => navigate(`/challenge/${challenge.id}`)}
                   >
                     {/* Difficulty Badge */}
                     <div className="flex items-start justify-between mb-4">
@@ -187,9 +187,8 @@ const Challenges = () => {
                       <Button
                         variant="outline"
                         className="w-full bg-success/10 border-success/30 text-success hover:bg-success/20"
-                        disabled
                       >
-                        ✅ Solved
+                        ✅ Solved - Try Again →
                       </Button>
                     ) : (
                       <Button

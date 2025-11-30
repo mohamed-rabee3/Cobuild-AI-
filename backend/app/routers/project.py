@@ -35,19 +35,39 @@ async def initialize_project(request: ProjectInitRequest):
         # Generate prompt
         prompt = get_project_init_prompt(request.idea, request.language, request.level)
         
-        # Call Gemini API
+        # Call Gemini API with high token limit for complete project generation
         result = await gemini.generate_json(
             prompt=prompt,
             temperature=0.7,
-            max_output_tokens=4096
+            max_output_tokens=30000  # High limit for complete project generation
         )
         
         # Validate response structure
         required_keys = ["project_title", "mermaid_chart", "tasks", "full_solution_code", "starter_filename"]
-        if not all(key in result for key in required_keys):
-            raise ValueError(f"Missing required keys in AI response: {result.keys()}")
+        missing_keys = [key for key in required_keys if key not in result]
+        
+        if missing_keys:
+            logger.error(f"❌ Missing required keys in AI response: {missing_keys}")
+            logger.error(f"Available keys: {list(result.keys())}")
+            raise ValueError(f"Missing required keys in AI response: {missing_keys}. Available: {list(result.keys())}")
+        
+        # Validate data types and non-empty values
+        if not isinstance(result.get("tasks"), list) or len(result.get("tasks", [])) == 0:
+            logger.error(f"❌ Invalid tasks: {result.get('tasks')}")
+            raise ValueError("Tasks must be a non-empty list")
+        
+        if not result.get("mermaid_chart") or not result.get("mermaid_chart").strip():
+            logger.error("❌ Empty mermaid_chart")
+            raise ValueError("Mermaid chart cannot be empty")
+        
+        if not result.get("full_solution_code") or not result.get("full_solution_code").strip():
+            logger.error("❌ Empty full_solution_code")
+            raise ValueError("Full solution code cannot be empty")
         
         logger.info(f"✅ Project initialized: {result['project_title']}")
+        logger.debug(f"Response keys: {list(result.keys())}")
+        logger.debug(f"Tasks count: {len(result.get('tasks', []))}")
+        
         return ProjectInitResponse(**result)
     
     except GeminiServiceError as e:
@@ -97,7 +117,7 @@ async def review_code(request: CodeReviewRequest):
         result = await gemini.generate_json(
             prompt=prompt,
             temperature=0.8,  # Higher for varied questioning
-            max_output_tokens=500
+            max_output_tokens=2048  # Increased from 500 to handle longer responses
         )
         
         return CodeReviewResponse(**result)

@@ -49,10 +49,30 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Add middleware to log all requests (before CORS)
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(f"📥 {request.method} {request.url.path} from {request.client.host if request.client else 'unknown'}")
+    if request.method == "OPTIONS":
+        logger.info(f"   CORS preflight request")
+    response = await call_next(request)
+    logger.info(f"📤 Response: {response.status_code}")
+    return response
+
 # CORS Configuration
+# Allow both common frontend ports in development
+allowed_origins = [
+    settings.frontend_url,
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://[::1]:8080",  # IPv6 localhost
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -68,9 +88,15 @@ app.include_router(challenges.router, prefix="/api/challenges", tags=["Challenge
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """Handle Pydantic validation errors (422)."""
+    logger.error(f"Validation error for {request.method} {request.url.path}: {exc.errors()}")
     return JSONResponse(
         status_code=422,
-        content={"detail": exc.errors()}
+        content={
+            "error": "validation_error",
+            "message": "البيانات المرسلة غير صحيحة",
+            "detail": exc.errors(),
+            "retryable": False
+        }
     )
 
 

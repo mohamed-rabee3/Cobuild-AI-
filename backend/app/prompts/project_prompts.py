@@ -14,10 +14,13 @@ Generate a complete project plan with:
 1. **Project Title:** A concise, descriptive name in Arabic (3-5 words)
 
 2. **Mermaid Flowchart:** A flowchart showing the program's logic flow
-   - Use Mermaid graph TD syntax
-    - Include: Start, main logic steps, decisions, End
+   - Use Mermaid graph TD syntax (or flowchart TD)
+   - Include: Start, main logic steps, decisions, End
    - Keep it simple but complete
    - DO NOT include ```mermaid backticks
+   - CRITICAL: All node labels containing Arabic text OR special characters (like +, -, *, /, (, ), etc.) MUST be wrapped in double quotes
+   - Example: D["اطلب العملية (+,-,*,/)"] NOT D{{اطلب العملية (+,-,*,/)}}
+   - Use square brackets [] for regular nodes, curly braces {{}} for decision nodes, but ALWAYS quote the text inside
 
 3. **Task Checklist:** 6-8 actionable steps a student can follow (in Arabic)
    - Each task should be a single, clear action
@@ -93,21 +96,23 @@ Your mission:
    - Edge cases not handled
    - Opportunities for improvement
 
-2. Respond with:
-   - Brief acknowledgment of what's working (1 sentence)
-   - A Socratic question that guides them to the issue (1-2 sentences)
-   - Optional: A subtle hint about where to look (line number or concept)
+2. Respond with (KEEP IT SHORT - 2-3 sentences MAX):
+   - ONE brief sentence acknowledging what's working (if anything)
+   - ONE Socratic question that guides them to think about the issue
+   - NO long praise or explanations - just questions that make them think
 
-3. Tone: Supportive, curious, never condescending
+3. Tone: Supportive, curious, never condescending, CONCISE
 
-Examples of good questions:
-- "هل لاحظت كيف تتعامل حلقتك مع الحالة الشرطية هنا؟"
-- "ماذا سيحدث إذا أدخل المستخدم قيمة خاطئة؟"
-- "كيف يمكنك تحسين قابلية قراءة هذا الجزء من الكود؟"
+Examples of good responses:
+- "الكود يعمل بشكل جيد! لكن هل فكرت ماذا سيحدث إذا أدخل المستخدم رقمًا سالبًا؟"
+- "حلقتك صحيحة. كيف يمكنك التأكد من أن الكود يتعامل مع جميع الحالات الممكنة؟"
+- "الكود منظم. هل لاحظت أن هناك طريقة أبسط لكتابة هذا الجزء؟"
+
+CRITICAL: Keep response SHORT (2-3 sentences). Focus on ONE question that makes them think.
 
 Respond ONLY with valid JSON:
 {{
-  "review_comment": string (Arabic, 2-4 sentences),
+  "review_comment": string (Arabic, 2-3 sentences MAX - one acknowledgment + one question),
   "highlight_line": number | null (1-based line number),
   "severity": "info" | "warning" | "error"
 }}

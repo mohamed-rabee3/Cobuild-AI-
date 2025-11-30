@@ -70,6 +70,13 @@ export interface PistonRequest {
 export interface PistonResponse {
   language: string;
   version: string;
+  compile?: {
+    stdout: string;
+    stderr: string;
+    code: number;
+    signal: string | null;
+    output: string;
+  };
   run: {
     stdout: string;
     stderr: string;
@@ -78,3 +85,52 @@ export interface PistonResponse {
     output: string;
   };
 }
+
+// ============================================
+// Project API Types
+// ============================================
+
+export interface ProjectInitRequest {
+  idea: string;
+  language: Language;
+  level: Level;
+}
+
+export interface ProjectInitResponse {
+  project_title: string;        // Arabic title
+  mermaid_chart: string;         // Raw Mermaid syntax (no backticks)
+  tasks: string[];               // Task descriptions
+  full_solution_code: string;    // Complete solution
+  starter_filename: string;      // e.g., "game.py"
+}
+
+export interface CodeReviewRequest {
+  code: string;
+  language: Language;
+  project_context: {
+    title: string;
+    tasks: string[];
+    current_task_index: number;
+  };
+  previous_review?: string;
+}
+
+export interface CodeReviewResponse {
+  review_comment: string;        // Socratic questions/hints
+  highlight_line?: number | null; // Optional line number to highlight
+  severity: "info" | "warning" | "error"; // Severity level
+}
+
+export interface ChatRequest {
+  message: string;
+  language: Language;
+  project_title: string;
+  history: Array<{ role: string; content: string }>;
+  current_code: string;
+}
+
+export interface ChatResponse {
+  response: string;
+  suggested_reading: string | null;
+}
+

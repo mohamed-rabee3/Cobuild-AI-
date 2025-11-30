@@ -36,15 +36,21 @@ async def generate_challenges(request: ChallengeGenerateRequest):
         result = await gemini.generate_json(
             prompt=prompt,
             temperature=0.9,  # Higher for creativity
-            max_output_tokens=8192  # Increased for comprehensive descriptions
+            max_output_tokens=16384  # Increased for multiple challenges
         )
         
         # Result should be an array of challenges
         if not isinstance(result, list):
-            raise ValueError("AI response is not an array")
+            logger.error(f"❌ AI response is not an array. Type: {type(result)}, Value: {result}")
+            raise ValueError(f"AI response is not an array. Got type: {type(result).__name__}")
         
         # Parse challenges
-        challenges = [Challenge(**challenge_data) for challenge_data in result]
+        try:
+            challenges = [Challenge(**challenge_data) for challenge_data in result]
+        except Exception as parse_error:
+            logger.error(f"❌ Failed to parse challenges: {parse_error}")
+            logger.error(f"Response data: {result}")
+            raise ValueError(f"Failed to parse challenge data: {parse_error}")
         
         logger.info(f"✅ Generated {len(challenges)} challenges")
         return ChallengeGenerateResponse(challenges=challenges)

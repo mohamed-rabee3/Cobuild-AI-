@@ -34,12 +34,12 @@ Difficulty guidelines:
 
 For each challenge, provide:
 - Unique title (not in existing_titles)
-- **Comprehensive description in Arabic (3-5 paragraphs)**:
-  1. **Problem overview**: What the function does (2-3 sentences)
-  2. **Examples**: 1-2 concrete input/output examples (2 sentences)
-  3. **Constraints** (optional): Edge cases or important notes (1 sentence)
-  - Use Markdown formatting (use **bold** for key terms)
-  - Mix Arabic with English technical terms when needed
+- **Clear description in Arabic (2-3 paragraphs)**:
+  1. **Problem overview**: What the function does (2 sentences)
+  2. **Example**: 1 concrete input/output example (1-2 sentences)
+  3. **Note** (optional): Important constraint or edge case (1 sentence)
+  - Use Markdown formatting for **bold** key terms
+  - Mix Arabic with English technical terms
 - Function signature for {language}
 - 5-8 test cases (3-4 visible, 2-4 hidden)
 
@@ -48,11 +48,18 @@ Test case format:
 - `expected`: Expected output as string (e.g., "5")
 - `hidden`: Boolean (true = not shown to student)
 
+**CRITICAL: Test Case Accuracy**
+- VERIFY each expected output by manually tracing through the logic
+- DO NOT guess expected values - calculate them step by step
+- For string operations: count characters carefully
+- For math operations: verify calculations
+- Ensure expected values match EXACTLY what the function should return
+
 Respond ONLY with valid JSON array:
 [
   {{
     "title": string (unique, concise),
-    "description": string (Arabic Markdown, 3-5 comprehensive paragraphs),
+    "description": string (Arabic Markdown, 2-3 clear paragraphs),
     "function_signature": string (language-specific),
     "test_cases": [
       {{

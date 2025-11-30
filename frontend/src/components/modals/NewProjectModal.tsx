@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { storageService } from "@/services/storage";
+import { projectsApi } from "@/services/projectsApi";
 import { Language, Project } from "@/types";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -43,23 +44,50 @@ const NewProjectModal = ({ open, onOpenChange }: NewProjectModalProps) => {
 
     setIsGenerating(true);
 
-    // Mock AI generation - in real app, call backend API
-    setTimeout(() => {
+    try {
+      // Call backend API to generate project plan
+      const requestPayload = {
+        idea: idea.trim(),
+        language,
+        level: profile?.level || "beginner",
+      };
+
+      console.log("🔍 Project Init Request:", requestPayload);
+      console.log("🔍 About to call projectsApi.initializeProject...");
+      const response = await projectsApi.initializeProject(requestPayload);
+      console.log("🔍 Received response:", response);
+      console.log("🔍 Response keys:", Object.keys(response));
+      console.log("🔍 Response validation:", {
+        hasTitle: !!response.project_title,
+        hasMermaid: !!response.mermaid_chart,
+        hasTasks: Array.isArray(response.tasks) && response.tasks.length > 0,
+        hasCode: !!response.full_solution_code,
+        hasFilename: !!response.starter_filename,
+      });
+
+      // Validate response before creating project
+      if (!response.project_title || !response.mermaid_chart || !response.tasks || !response.full_solution_code || !response.starter_filename) {
+        throw new Error("الاستجابة من الخادم غير مكتملة. بعض البيانات مفقودة.");
+      }
+
+      if (!Array.isArray(response.tasks) || response.tasks.length === 0) {
+        throw new Error("قائمة المهام فارغة. حاول مرة أخرى.");
+      }
+
+      // Transform API response to Project object
       const newProject: Project = {
         id: `project-${Date.now()}`,
-        title: idea.trim().slice(0, 50),
+        title: response.project_title,
         language,
-        filename: language === "python" ? "main.py" : language === "javascript" ? "main.js" : "main.cpp",
-        code: `# ${idea}\n# Start coding here...\n\ndef main():\n    print("Hello, World!")\n\nif __name__ == "__main__":\n    main()`,
-        mermaidChart: `graph TD\n    A[Start] --> B[Initialize]\n    B --> C[Process]\n    C --> D[Output]\n    D --> E[End]`,
-        tasks: [
-          { id: "task-1", text: "إعداد المشروع الأساسي", completed: false },
-          { id: "task-2", text: "إضافة المدخلات", completed: false },
-          { id: "task-3", text: "معالجة البيانات", completed: false },
-          { id: "task-4", text: "عرض النتائج", completed: false },
-          { id: "task-5", text: "اختبار البرنامج", completed: false },
-        ],
-        hiddenSolution: `# Complete solution\ndef main():\n    print("Complete implementation")\n\nif __name__ == "__main__":\n    main()`,
+        filename: response.starter_filename,
+        code: `# ${response.project_title}\n# ${idea.trim()}\n\n`, // Start with empty template
+        mermaidChart: response.mermaid_chart,
+        tasks: response.tasks.map((taskText, index) => ({
+          id: `task-${index + 1}`,
+          text: taskText,
+          completed: false,
+        })),
+        hiddenSolution: response.full_solution_code,
         chatHistory: [
           {
             role: "assistant",
@@ -71,12 +99,44 @@ const NewProjectModal = ({ open, onOpenChange }: NewProjectModalProps) => {
         createdAt: Date.now(),
       };
 
+      console.log("🔍 Created project object:", {
+        id: newProject.id,
+        title: newProject.title,
+        tasksCount: newProject.tasks.length,
+        hasMermaid: !!newProject.mermaidChart,
+        hasCode: !!newProject.hiddenSolution,
+      });
+
+      // Save to localStorage
       storageService.saveProject(newProject);
+
+      // Success feedback
       toast.success("تم إنشاء المشروع بنجاح! 🎉");
+
+      // Close modal and navigate
       onOpenChange(false);
       setIdea("");
+      setIsGenerating(false);
       navigate(`/project/${newProject.id}`);
-    }, 2000);
+    } catch (error: any) {
+      setIsGenerating(false);
+      console.error("Project generation error:", error);
+
+      // Handle different error types with specific messages
+      if (error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK') {
+        toast.error("❌ لا يمكن الاتصال بالخادم. تأكد من أن الخادم يعمل على المنفذ 8000.");
+      } else if (error.message?.includes("timeout") || error.message?.includes("مهلة")) {
+        toast.error("⏱️ انتهت مهلة الاتصال. الذكاء الاصطناعي يحتاج وقتاً أطول. حاول مرة أخرى.");
+      } else if (error.status === 404) {
+        toast.error("❌ المسار غير موجود. تحقق من إعدادات الخادم.");
+      } else if (error.message) {
+        toast.error(error.message);
+      } else if (error.retryable) {
+        toast.error("فشل في توليد المشروع. حاول مرة أخرى.");
+      } else {
+        toast.error("حدث خطأ غير متوقع. تحقق من الاتصال بالإنترنت والخادم.");
+      }
+    }
   };
 
   return (
