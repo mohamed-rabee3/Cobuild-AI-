@@ -18,9 +18,9 @@
 
 <div align="center">
 
-<video src="Demo/demo.mp4" width="800" controls>
-  Your browser does not support the video tag.
-</video>
+![Cobuild AI Demo](Gif/demo.gif)
+
+*Interactive demo showcasing Cobuild AI features*
 
 </div>
 
