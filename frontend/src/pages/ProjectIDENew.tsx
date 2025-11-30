@@ -73,21 +73,21 @@ const ProjectIDENew = () => {
     }
 
     setIsRunning(true);
-    setOutput("$ Running code...\n\n");
+    setOutput("$ جاري تشغيل الكود...\n\n");
 
     try {
       const inputLines = inputs.split("\n").filter(line => line.trim());
       const result = await pistonService.execute(code, project?.language || "python", inputLines);
 
       if (result.run.code === 0) {
-        setOutput(`$ Running ${project?.filename}...\n\n${result.run.output}\n\n✅ Exited with code 0`);
+        setOutput(`$ جاري تشغيل ${project?.filename}...\n\n${result.run.output}\n\n✅ انتهى بالرمز 0`);
         toast.success("تم تشغيل الكود بنجاح");
       } else {
-        setOutput(`$ Running ${project?.filename}...\n\n${result.run.stderr || result.run.output}\n\n❌ Exited with code ${result.run.code}`);
+        setOutput(`$ جاري تشغيل ${project?.filename}...\n\n${result.run.stderr || result.run.output}\n\n❌ انتهى بالرمز ${result.run.code}`);
         toast.error("حدث خطأ أثناء التنفيذ");
       }
     } catch (error: any) {
-      setOutput(`❌ Error: ${error.message}`);
+      setOutput(`❌ خطأ: ${error.message}`);
       toast.error("فشل تشغيل الكود");
     } finally {
       setIsRunning(false);
@@ -263,8 +263,8 @@ const ProjectIDENew = () => {
         <div className="w-1/5 border-r border-border bg-card overflow-hidden flex flex-col">
           <Tabs defaultValue="tasks" className="flex-1 flex flex-col">
             <TabsList className="w-full rounded-none border-b border-border shrink-0">
-              <TabsTrigger value="blueprint" className="flex-1">Blueprint</TabsTrigger>
-              <TabsTrigger value="tasks" className="flex-1">Tasks</TabsTrigger>
+              <TabsTrigger value="blueprint" className="flex-1">المخطط</TabsTrigger>
+              <TabsTrigger value="tasks" className="flex-1">المهام</TabsTrigger>
             </TabsList>
 
             <TabsContent value="blueprint" className="flex-1 overflow-hidden m-0 p-0">
@@ -294,7 +294,7 @@ const ProjectIDENew = () => {
 
               <div className="pt-4 border-t border-border">
                 <div className="text-sm text-muted-foreground text-center">
-                  {completedTasks} / {project.tasks.length} completed
+                  {completedTasks} / {project.tasks.length} مكتمل
                 </div>
               </div>
             </TabsContent>
@@ -337,12 +337,12 @@ const ProjectIDENew = () => {
             <div className="flex items-center gap-2 px-4 py-2 border-b border-border">
               <Button size="sm" variant="outline" onClick={() => setShowInputModal(true)}>
                 <Plus className="h-4 w-4 mr-1" />
-                Add Inputs {inputCount > 0 && `(${inputCount})`}
+                إضافة مدخلات {inputCount > 0 && `(${inputCount})`}
               </Button>
 
               <Button size="sm" onClick={handleRunCode} disabled={isRunning}>
                 <Play className="h-4 w-4 mr-1" />
-                {isRunning ? "Running..." : "Run Code"}
+                {isRunning ? "جاري التشغيل..." : "تشغيل الكود"}
               </Button>
 
               <Button size="sm" variant="ghost" onClick={() => setOutput("")}>
@@ -352,7 +352,7 @@ const ProjectIDENew = () => {
 
             <div className="flex-1 overflow-y-auto p-4">
               <pre className="font-mono text-sm text-muted-foreground whitespace-pre-wrap">
-                {output || "Press Run to execute your code"}
+                {output || "اضغط 'تشغيل الكود' لتنفيذ الكود"}
               </pre>
             </div>
           </div>
@@ -363,7 +363,7 @@ const ProjectIDENew = () => {
           <div className="p-4 border-b border-border shrink-0">
             <Button className="w-full" variant="outline" onClick={() => setShowSolutionModal(true)}>
               <Lightbulb className="h-4 w-4 mr-2" />
-              Show Solution
+              عرض الحل
             </Button>
           </div>
 
@@ -381,7 +381,7 @@ const ProjectIDENew = () => {
                   dir={isArabic ? "rtl" : "ltr"}
                 >
                   <p className={`text-xs font-medium mb-2 ${isArabic ? "text-right" : "text-left"}`}>
-                    {msg.role === "assistant" ? "🤖 AI Mentor" : "👤 أنت"}
+                    {msg.role === "assistant" ? "🤖 المعلم الذكي" : "👤 أنت"}
                   </p>
                   <div className="text-sm">
                     <MarkdownRenderer content={msg.content} />
@@ -393,33 +393,35 @@ const ProjectIDENew = () => {
 
           {/* Input Area */}
           <div className="p-4 border-t border-border space-y-2 shrink-0">
-            <Textarea
-              value={chatMessage}
-              onChange={(e) => setChatMessage(e.target.value)}
-              placeholder="اسأل الـ AI..."
-              className="resize-none h-20"
-              dir="rtl"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-            />
-
-            <Button onClick={handleSendMessage} className="w-full" size="sm" disabled={isChatLoading || !chatMessage.trim()}>
-              {isChatLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  جاري الإرسال...
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4 mr-2" />
-                  إرسال
-                </>
-              )}
-            </Button>
+            {/* Chat Input with Send Button */}
+            <div className="relative">
+              <Textarea
+                value={chatMessage}
+                onChange={(e) => setChatMessage(e.target.value)}
+                placeholder="اسأل الـ AI..."
+                className="resize-none h-20 pl-12"
+                dir="rtl"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+              />
+              <Button
+                onClick={handleSendMessage}
+                disabled={isChatLoading || !chatMessage.trim()}
+                className="absolute top-1/2 left-2 -translate-y-1/2 h-9 w-9 rounded-full p-0 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                size="icon"
+                aria-label="إرسال"
+              >
+                {isChatLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
 
             <Button variant="outline" className="w-full" size="sm" onClick={handleReviewCode} disabled={isReviewLoading || !code.trim()}>
               {isReviewLoading ? (
@@ -429,7 +431,7 @@ const ProjectIDENew = () => {
                 </>
               ) : (
                 <>
-                  🔬 Review My Code
+                  🔬 مراجعة الكود
                 </>
               )}
             </Button>

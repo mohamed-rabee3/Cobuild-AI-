@@ -19,7 +19,7 @@ const ChallengeRunner = () => {
   // Load challenge from localStorage based on ID
   useEffect(() => {
     if (!id) {
-      toast.error("Challenge ID missing");
+      toast.error("معرف التحدي مفقود");
       navigate("/challenges");
       return;
     }
@@ -28,7 +28,7 @@ const ChallengeRunner = () => {
     const foundChallenge = challenges.find((c) => c.id === id);
 
     if (!foundChallenge) {
-      toast.error("Challenge not found");
+      toast.error("التحدي غير موجود");
       navigate("/challenges");
       return;
     }
@@ -36,7 +36,7 @@ const ChallengeRunner = () => {
     setChallenge(foundChallenge);
 
     // Set initial code to function signature
-    setCode(foundChallenge.function_signature + "\n    # Your code here\n    pass");
+    setCode(foundChallenge.function_signature + "\n    # اكتب كودك هنا\n    pass");
   }, [id, navigate]);
 
   // Return loading state while challenge loads
@@ -45,7 +45,7 @@ const ChallengeRunner = () => {
       <div className="h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="text-4xl mb-4">⏳</div>
-          <p className="text-muted-foreground">Loading challenge...</p>
+          <p className="text-muted-foreground">جاري تحميل التحدي...</p>
         </div>
       </div>
     );
@@ -63,7 +63,7 @@ const ChallengeRunner = () => {
     try {
       let passedCount = 0;
       const totalTests = challenge.test_cases.length;
-      let outputText = "Testing...\n\n";
+      let outputText = "جاري الاختبار...\n\n";
 
       // Run each test case
       for (let i = 0; i < challenge.test_cases.length; i++) {
@@ -100,28 +100,28 @@ const ChallengeRunner = () => {
           if (passed) passedCount++;
 
           // Build output display
-          const testLabel = testCase.hidden ? `Hidden Test ${i + 1}` : `Test ${i + 1}`;
-          const inputDisplay = testCase.hidden ? "[Hidden]" : testCase.input;
+          const testLabel = testCase.hidden ? `اختبار مخفي ${i + 1}` : `اختبار ${i + 1}`;
+          const inputDisplay = testCase.hidden ? "[مخفي]" : testCase.input;
 
           if (passed) {
-            outputText += `✅ ${testLabel}: ${inputDisplay} → Passed\n`;
+            outputText += `✅ ${testLabel}: ${inputDisplay} → نجح\n`;
           } else {
-            outputText += `❌ ${testLabel}: ${inputDisplay} → Failed\n`;
+            outputText += `❌ ${testLabel}: ${inputDisplay} → فشل\n`;
             // TEMPORARILY show hidden test details for debugging
-            outputText += `   Expected: "${expectedOutput}"\n`;
-            outputText += `   Got: "${actualOutput}"\n`;
-            outputText += `   Input was: ${testCase.input}\n`;
+            outputText += `   المتوقع: "${expectedOutput}"\n`;
+            outputText += `   الناتج: "${actualOutput}"\n`;
+            outputText += `   المدخل كان: ${testCase.input}\n`;
           }
 
           // Show compile/runtime errors if any
           if (result.compile?.stderr) {
-            outputText += `   ⚠️ Compile Error: ${result.compile.stderr}\n`;
+            outputText += `   ⚠️ خطأ في الترجمة: ${result.compile.stderr}\n`;
           }
           if (result.run?.stderr) {
-            outputText += `   ⚠️ Runtime Error: ${result.run.stderr}\n`;
+            outputText += `   ⚠️ خطأ في التشغيل: ${result.run.stderr}\n`;
           }
         } catch (testError: any) {
-          outputText += `❌ Test ${i + 1}: Error executing test\n`;
+          outputText += `❌ اختبار ${i + 1}: خطأ في تنفيذ الاختبار\n`;
           outputText += `   ${testError.message}\n`;
         }
 
@@ -130,20 +130,20 @@ const ChallengeRunner = () => {
 
       // Summary
       outputText += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-      outputText += `📊 Results: ${passedCount}/${totalTests} test cases passed\n`;
+      outputText += `📊 النتائج: ${passedCount}/${totalTests} اختبار نجح\n`;
 
       if (passedCount === totalTests) {
-        outputText += `\n🎉 Excellent! All tests passed!\n`;
+        outputText += `\n🎉 ممتاز! جميع الاختبارات نجحت!\n`;
         // Mark challenge as solved
         storageService.markChallengeSolved(challenge.id);
         toast.success("تهانينا! حليت التحدي بنجاح! 🎉");
       } else {
-        outputText += `\n💡 Keep trying! ${totalTests - passedCount} test(s) need fixing.\n`;
+        outputText += `\n💡 استمر في المحاولة! ${totalTests - passedCount} اختبار يحتاج إصلاح.\n`;
       }
 
       setOutput(outputText);
     } catch (error: any) {
-      setOutput(`❌ Error: ${error.message}\n\nPlease check your code and try again.`);
+      setOutput(`❌ خطأ: ${error.message}\n\nالرجاء التحقق من الكود والمحاولة مرة أخرى.`);
       toast.error("حدث خطأ أثناء التشغيل");
     } finally {
       setIsRunning(false);
@@ -191,8 +191,8 @@ const ChallengeRunner = () => {
               .slice(0, 3)
               .map((tc, i) => (
                 <div key={i} className="bg-secondary/30 rounded-lg p-3 font-mono text-sm">
-                  <div>Input: {tc.input}</div>
-                  <div className="text-primary">Expected: {tc.expected}</div>
+                  <div>المدخل: {tc.input}</div>
+                  <div className="text-primary">المتوقع: {tc.expected}</div>
                 </div>
               ))}
           </div>

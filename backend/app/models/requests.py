@@ -34,7 +34,7 @@ class ProjectContext(BaseModel):
 
 
 class CodeReviewRequest(BaseModel):
-    """POST /api/project/review - Socratic code review"""
+    """POST /api/project/review - Comprehensive code review with direct feedback"""
     code: str = Field(..., min_length=1, max_length=10000)
     language: Literal["python", "javascript", "cpp"]
     project_context: ProjectContext

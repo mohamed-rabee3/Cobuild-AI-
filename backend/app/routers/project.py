@@ -97,8 +97,8 @@ async def review_code(request: CodeReviewRequest):
     """
     POST /api/project/review
     
-    Socratic code review that guides students through questions,
-    never providing direct solutions.
+    Comprehensive code review that provides direct feedback on
+    what's correct, what's wrong, and what needs to be done.
     """
     try:
         logger.info(f"Reviewing code for: {request.project_context.title}")

@@ -70,7 +70,7 @@ const Challenges = () => {
     // Close dialog
     setShowClearDialog(false);
     // Show toast
-    toast.success("All challenges cleared");
+            toast.success("تم مسح جميع التحديات");
   };
 
   return (
@@ -78,20 +78,9 @@ const Challenges = () => {
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">⚔️ Daily Challenges</h1>
+          <h1 className="text-2xl font-bold">⚔️ التحديات اليومية</h1>
 
           <div className="flex items-center gap-2">
-            {challenges.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowClearDialog(true)}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Clear All
-              </Button>
-            )}
             <Button
               variant="ghost"
               size="icon"
@@ -112,7 +101,7 @@ const Challenges = () => {
           size="lg"
         >
           <Plus className="h-5 w-5 mr-2" />
-          + Generate New Challenges
+          إنشاء تحديات جديدة
         </Button>
 
         {/* Filter Tabs */}
@@ -121,12 +110,25 @@ const Challenges = () => {
           className="mb-6"
           onValueChange={setSelectedDifficulty}
         >
-          <TabsList className="w-full justify-start">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="easy">Easy</TabsTrigger>
-            <TabsTrigger value="medium">Medium</TabsTrigger>
-            <TabsTrigger value="hard">Hard</TabsTrigger>
-          </TabsList>
+          <div className="flex items-center justify-between gap-2">
+            <TabsList className="flex-1 justify-start">
+              <TabsTrigger value="all">الكل</TabsTrigger>
+              <TabsTrigger value="easy">سهل</TabsTrigger>
+              <TabsTrigger value="medium">متوسط</TabsTrigger>
+              <TabsTrigger value="hard">صعب</TabsTrigger>
+            </TabsList>
+            {challenges.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowClearDialog(true)}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 whitespace-nowrap"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                مسح الكل
+              </Button>
+            )}
+          </div>
 
           <TabsContent value={selectedDifficulty} className="mt-6">
             {filteredChallenges.length === 0 ? (
@@ -134,13 +136,13 @@ const Challenges = () => {
               <div className="text-center py-16 px-4">
                 <div className="bg-card border border-border rounded-xl p-8 max-w-md mx-auto">
                   <div className="text-6xl mb-4">📭</div>
-                  <h3 className="text-xl font-semibold mb-2">No challenges yet</h3>
+                  <h3 className="text-xl font-semibold mb-2">لا توجد تحديات بعد</h3>
                   <p className="text-muted-foreground mb-6">
-                    Click "Generate New Challenges" to create your first problems!
+                    اضغط "إنشاء تحديات جديدة" لإنشاء أول مسائل لك!
                   </p>
                   <Button onClick={() => setShowGenerateModal(true)}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Generate Challenges
+                    إنشاء تحديات
                   </Button>
                 </div>
               </div>
@@ -163,7 +165,7 @@ const Challenges = () => {
                         {getDifficultyIcon(challenge.difficulty)}
                       </span>
                       <span className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
-                        {challenge.difficulty}
+                        {challenge.difficulty === "easy" ? "سهل" : challenge.difficulty === "medium" ? "متوسط" : "صعب"}
                       </span>
                     </div>
 
@@ -178,7 +180,7 @@ const Challenges = () => {
                         {getLanguageIcon(challenge.language)}
                       </span>
                       <span className="text-sm text-muted-foreground capitalize">
-                        {challenge.language}
+                        {challenge.language === "python" ? "Python" : challenge.language === "javascript" ? "JavaScript" : "C++"}
                       </span>
                     </div>
 
@@ -188,13 +190,13 @@ const Challenges = () => {
                         variant="outline"
                         className="w-full bg-success/10 border-success/30 text-success hover:bg-success/20"
                       >
-                        ✅ Solved - Try Again →
+                        ✅ تم الحل - حاول مرة أخرى →
                       </Button>
                     ) : (
                       <Button
                         className="w-full"
                       >
-                        Solve →
+                        حل →
                       </Button>
                     )}
                   </div>
@@ -214,19 +216,19 @@ const Challenges = () => {
       <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Clear All Challenges?</AlertDialogTitle>
+            <AlertDialogTitle>مسح جميع التحديات؟</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete all {challenges.length} challenge{challenges.length > 1 ? 's' : ''} from your list.
-              This action cannot be undone.
+              سيتم حذف جميع التحديات ({challenges.length} تحدياً) من قائمتك بشكل دائم.
+              لا يمكن التراجع عن هذا الإجراء.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleClearChallenges}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Clear All
+              مسح الكل
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

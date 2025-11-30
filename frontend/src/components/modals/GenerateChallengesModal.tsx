@@ -61,13 +61,13 @@ const GenerateChallengesModal = ({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                    <DialogTitle className="text-xl">✨ Generate New Challenges</DialogTitle>
+                    <DialogTitle className="text-xl">✨ إنشاء تحديات جديدة</DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
                     {/* Challenge Count Slider */}
                     <div className="space-y-3">
-                        <label className="text-sm font-medium">How many challenges?</label>
+                        <label className="text-sm font-medium">كم عدد التحديات؟</label>
                         <div className="px-2">
                             <Slider
                                 value={count}
@@ -92,7 +92,7 @@ const GenerateChallengesModal = ({
 
                     {/* Difficulty Selection */}
                     <div className="space-y-3">
-                        <label className="text-sm font-medium">Difficulty Level</label>
+                        <label className="text-sm font-medium">مستوى الصعوبة</label>
                         <div className="grid grid-cols-3 gap-3">
                             <button
                                 type="button"
@@ -107,7 +107,7 @@ const GenerateChallengesModal = ({
                 `}
                             >
                                 <span className="text-2xl">🟢</span>
-                                <span className="text-sm font-medium">Easy</span>
+                                <span className="text-sm font-medium">سهل</span>
                             </button>
 
                             <button
@@ -123,7 +123,7 @@ const GenerateChallengesModal = ({
                 `}
                             >
                                 <span className="text-2xl">🟡</span>
-                                <span className="text-sm font-medium">Medium</span>
+                                <span className="text-sm font-medium">متوسط</span>
                             </button>
 
                             <button
@@ -139,14 +139,14 @@ const GenerateChallengesModal = ({
                 `}
                             >
                                 <span className="text-2xl">🔴</span>
-                                <span className="text-sm font-medium">Hard</span>
+                                <span className="text-sm font-medium">صعب</span>
                             </button>
                         </div>
                     </div>
 
                     {/* Language Selection */}
                     <div className="space-y-3">
-                        <label className="text-sm font-medium">Programming Language</label>
+                        <label className="text-sm font-medium">لغة البرمجة</label>
                         <div className="grid grid-cols-3 gap-3">
                             <button
                                 type="button"
@@ -207,7 +207,7 @@ const GenerateChallengesModal = ({
                         className="flex-1"
                         disabled={generateMutation.isPending}
                     >
-                        Cancel
+                        إلغاء
                     </Button>
                     <Button
                         onClick={handleGenerate}
@@ -217,10 +217,10 @@ const GenerateChallengesModal = ({
                         {generateMutation.isPending ? (
                             <>
                                 <span className="animate-spin mr-2">⏳</span>
-                                Generating...
+                                جاري الإنشاء...
                             </>
                         ) : (
-                            <>Generate ({count[0]}) →</>
+                            <>إنشاء ({count[0]}) →</>
                         )}
                     </Button>
                 </div>

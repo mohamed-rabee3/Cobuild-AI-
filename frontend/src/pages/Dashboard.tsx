@@ -50,7 +50,7 @@ const Dashboard = () => {
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="font-medium">{profile.name}</p>
-              <p className="text-xs text-muted-foreground capitalize">{profile.level}</p>
+              <p className="text-xs text-muted-foreground">{profile.level === "beginner" ? "مبتدئ" : profile.level === "intermediate" ? "متوسط" : "متقدم"}</p>
             </div>
             <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground font-bold">
               {profile.name[0]}
@@ -72,9 +72,6 @@ const Dashboard = () => {
               <div className="h-14 w-14 rounded-xl bg-warning/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Sword className="h-7 w-7 text-warning" />
               </div>
-              <span className="text-xs font-medium text-warning bg-warning/10 px-3 py-1 rounded-full">
-                قريباً
-              </span>
             </div>
             
             <h2 className="text-2xl font-bold mb-2">التحديات اليومية</h2>
@@ -146,7 +143,7 @@ const Dashboard = () => {
                           {project.title}
                         </h4>
                         <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                          <span className="capitalize">{project.language}</span>
+                          <span>{project.language === "python" ? "Python" : project.language === "javascript" ? "JavaScript" : "C++"}</span>
                           <span>•</span>
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
